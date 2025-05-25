@@ -14,3 +14,7 @@ class SkillRead(SkillBase):
 
     class Config:
         orm_mode = True 
+
+# Für API Antworten die eine Liste von Skills mit Zusatzinfos zeigen
+class SkillWithProblemCountRead(SkillRead):
+    num_problems: int        
