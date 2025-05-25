@@ -1,5 +1,5 @@
-from database.db_setup import create_db_and_tables, engine # Stelle sicher, dass der Pfad stimmt
-from database.models import Teacher, Class, Student, Skill, Problem, Interaction, ProbeQuestionEntry, RecommendationReport # Importiere alle Modelle
+from database.db_setup import create_db_and_tables, engine 
+from database.models import Teacher, Class, Student, Skill, Problem, Interaction, ProbeQuestionEntry, RecommendationReport 
 
 if __name__ == "__main__":
     print("Datenbank und Tabellen werden erstellt...")
