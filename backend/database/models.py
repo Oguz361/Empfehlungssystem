@@ -33,6 +33,8 @@ class Student(Base):
     class_id = Column(Integer, ForeignKey("classes.id"), nullable=False)
     last_interaction_update_timestamp = Column(DateTime(timezone=True), nullable=True) 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    is_deleted = Column(Boolean, default=False)
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
 
     class_ = relationship("Class", back_populates="students") 
     interactions = relationship("Interaction", back_populates="student")
