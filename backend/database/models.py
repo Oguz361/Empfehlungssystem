@@ -60,7 +60,7 @@ class Problem(Base):
     original_problem_id = Column(String, nullable=False, unique=True, index=True)
     skill_id = Column(Integer, ForeignKey("skills.id"), nullable=False)
     difficulty_mu_q = Column(Float, nullable=True) 
-    description_placeholder = Column(String, nullable=False)
+    description_placeholder = Column(String, nullable=True)
     skill = relationship("Skill", back_populates="problems")
     interactions = relationship("Interaction", back_populates="problem")
 

@@ -2,8 +2,17 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc 
 from typing import List, Optional, Dict, Any 
 from datetime import datetime 
-from . import models, schemas 
+from . import models
 from passlib.context import CryptContext
+import schemas
+from schemas.teacher_schemas import TeacherCreate
+from schemas.class_schemas import ClassCreate
+from schemas.student_schemas import StudentCreate
+from schemas.skill_schemas import SkillCreate
+from schemas.problem_schemas import ProblemCreate
+from schemas.interaction_schemas import InteractionCreate, InteractionCSVRow
+from schemas.probe_question_schemas import ProbeQuestionEntryCreate
+from schemas.report_schemas import RecommendationReportCreate, ReportCommentCreate
 
 # Passwort-Hashing-Kontext für Teacher
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

@@ -4,7 +4,7 @@ from typing import Optional
 class ProblemBase(BaseModel):
     original_problem_id: str
     internal_idx: int
-    description_placeholder: str
+    description_placeholder: Optional[str] = None
     skill_internal_idx: int 
 
 class ProblemCreate(ProblemBase):

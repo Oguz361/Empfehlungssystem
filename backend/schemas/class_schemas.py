@@ -1,6 +1,9 @@
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import TYPE_CHECKING, Optional, List
 from datetime import datetime
+
+if TYPE_CHECKING:
+    from .student_schemas import StudentRead
 
 class ClassBase(BaseModel):
     name: str
@@ -13,7 +16,7 @@ class ClassRead(ClassBase):
     id: int
     teacher_id: int
     created_at: datetime
-    students: List[StudentRead] = [] 
+    students: List["StudentRead"] = [] 
 
     class Config:
         orm_mode = True
