@@ -16,4 +16,4 @@ class ProblemRead(ProblemBase):
     skill_id: int 
 
     class Config:
-        orm_mode = True
+        from_attributes = True

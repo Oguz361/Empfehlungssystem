@@ -16,7 +16,7 @@ class RecommendationReportRead(RecommendationReportBase):
     teacher_id: Optional[int]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ReportCommentCreate(BaseModel):
     teacher_comment: str

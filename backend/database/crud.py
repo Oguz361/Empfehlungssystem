@@ -310,3 +310,24 @@ def delete_report(db: Session, report_id: int) -> Optional[models.Recommendation
         db.delete(db_report)
         db.commit()
     return db_report
+
+# Platzhalter für Student Statistics
+def get_student_statistics(db: Session, student_id: int) -> Dict[str, Any]:
+    """
+    Platzhalter-Funktion für Schülerstatistiken.
+    Gibt derzeit ein leeres Dictionary zurück.
+    Die Logik fehlt noch.
+    """
+    student = get_student(db, student_id)
+    if not student:
+        return {"error": "Student not found for statistics"}
+
+    # Vorerst leeres Dictionary zurückgeben
+    return {
+        # beispiel ...
+        "total_interactions": 0,
+        "correct_interactions": 0,
+        "incorrect_interactions": 0,
+        "mastered_skills_count": 0,
+        "recent_activity_level": "unknown"
+    }

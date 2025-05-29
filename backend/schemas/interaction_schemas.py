@@ -15,7 +15,7 @@ class InteractionRead(InteractionBase):
     student_id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # CSV Import, 
 class InteractionCSVRow(BaseModel):
