@@ -13,6 +13,7 @@ from schemas.problem_schemas import ProblemCreate
 from schemas.interaction_schemas import InteractionCreate, InteractionCSVRow
 from schemas.probe_question_schemas import ProbeQuestionEntryCreate
 from schemas.report_schemas import RecommendationReportCreate, ReportCommentCreate
+from sqlalchemy.orm import joinedload
 
 # Passwort-Hashing-Kontext für Teacher
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -205,14 +206,40 @@ def update_problem_mu_q(db: Session, problem_internal_idx: int, mu_q: float) -> 
 def get_interaction(db: Session, interaction_id: int) -> Optional[models.Interaction]:
     return db.query(models.Interaction).filter(models.Interaction.id == interaction_id).first()
 
-def get_student_interactions(db: Session, student_id: int, limit: Optional[int] = None, sort_desc: bool = True, end_date: Optional[datetime] = None) -> List[models.Interaction]:
-    query = db.query(models.Interaction).filter(models.Interaction.student_id == student_id)
+def get_student_interactions(
+    db: Session, 
+    student_id: int, 
+    limit: Optional[int] = None, 
+    sort_desc: bool = True, 
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None,
+    skill_id: Optional[int] = None
+) -> List[models.Interaction]:
+    """
+    Ruft Interaktionen eines Schülers mit Eager Loading für Relationships.
+    """
+    query = db.query(models.Interaction)\
+        .options(
+            joinedload(models.Interaction.problem),
+            joinedload(models.Interaction.skill)
+        )\
+        .filter(models.Interaction.student_id == student_id)
+    
+    if start_date:
+        query = query.filter(models.Interaction.timestamp >= start_date)
     if end_date:
         query = query.filter(models.Interaction.timestamp <= end_date)
+    if skill_id:
+        query = query.filter(models.Interaction.skill_id == skill_id)
+    
     if sort_desc:
         query = query.order_by(desc(models.Interaction.timestamp))
+    else:
+        query = query.order_by(models.Interaction.timestamp)
+    
     if limit:
         query = query.limit(limit)
+    
     return query.all()
 
 def create_interaction(db: Session, interaction: schemas.InteractionCreate, student_id: int) -> models.Interaction:
@@ -317,23 +344,44 @@ def delete_report(db: Session, report_id: int) -> Optional[models.Recommendation
         db.commit()
     return db_report
 
-# Platzhalter für Student Statistics
 def get_student_statistics(db: Session, student_id: int) -> Dict[str, Any]:
     """
-    Platzhalter-Funktion für Schülerstatistiken.
-    Gibt derzeit ein leeres Dictionary zurück.
-    Die Logik fehlt noch.
+    Berechnet Statistiken für einen Schüler.
+    
+    Returns:
+        Dict mit total_interactions, correct_interactions, accuracy, skills_practiced, etc.
     """
+    from sqlalchemy import func
+    
     student = get_student(db, student_id)
     if not student:
-        return {"error": "Student not found for statistics"}
-
-    # Vorerst leeres Dictionary zurückgeben
+        return {}  
+    
+    total = db.query(func.count(models.Interaction.id))\
+        .filter(models.Interaction.student_id == student_id).scalar() or 0
+    
+    correct = db.query(func.count(models.Interaction.id))\
+        .filter(
+            models.Interaction.student_id == student_id,
+            models.Interaction.is_correct == True
+        ).scalar() or 0
+    
+    skills_practiced = db.query(func.count(func.distinct(models.Interaction.skill_id)))\
+        .filter(models.Interaction.student_id == student_id).scalar() or 0
+    
+    last_activity = db.query(func.max(models.Interaction.timestamp))\
+        .filter(models.Interaction.student_id == student_id).scalar()
+    
+    problems_attempted = db.query(func.count(func.distinct(models.Interaction.problem_id)))\
+        .filter(models.Interaction.student_id == student_id).scalar() or 0
+    
     return {
-        # beispiel ...
-        "total_interactions": 0,
-        "correct_interactions": 0,
-        "incorrect_interactions": 0,
-        "mastered_skills_count": 0,
-        "recent_activity_level": "unknown"
+        "total_interactions": total,
+        "correct_interactions": correct,
+        "incorrect_interactions": total - correct,
+        "accuracy": round((correct / total * 100) if total > 0 else 0, 2),
+        "skills_practiced": skills_practiced,
+        "problems_attempted": problems_attempted,
+        "last_activity": last_activity.isoformat() if last_activity else None,
+        "activity_status": "active" if last_activity else "no_activity"
     }
