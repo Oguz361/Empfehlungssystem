@@ -82,7 +82,13 @@ def get_student(db: Session, student_id: int) -> Optional[models.Student]:
     return db.query(models.Student).filter(models.Student.id == student_id).first()
 
 def get_students_by_class(db: Session, class_id: int, skip: int = 0, limit: int = 100) -> List[models.Student]:
-    return db.query(models.Student).filter(models.Student.class_id == class_id).offset(skip).limit(limit).all()
+    query = db.query(models.Student).filter(models.Student.class_id == class_id)
+    
+    # Wenn is_deleted existiert filtert gelöschte Schüler aus
+    if hasattr(models.Student, 'is_deleted'):
+        query = query.filter(models.Student.is_deleted == False)
+    
+    return query.offset(skip).limit(limit).all()
 
 def search_students_in_class(db: Session, class_id: int, query: str, skip: int = 0, limit: int = 100) -> List[models.Student]:
     search_query = f"%{query}%"

@@ -1,27 +1,31 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
-
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import HTTPException
 from api import student_routes
 
+# Logging Setup
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Lifespan Context Manager für Startup/Shutdown
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-
+    # Startup
     logger.info("Starting Knowledge Tracing System API...")
     
+    # Hier kannst du das AKT Model laden
     # from services.akt_model_service import get_akt_service
-    # akt_service = get_akt_service()  
+    # akt_service = get_akt_service()  # Lädt Model einmal beim Start
     
     yield
     
+    # Shutdown
     logger.info("Shutting down...")
 
+# Create FastAPI App
 app = FastAPI(
     title="Knowledge Tracing System API",
     description="Backend für AKT-basiertes Empfehlungssystem für Lehrkräfte",
@@ -99,7 +103,7 @@ async def get_system_stats():
     
     db = SessionLocal()
     
-    # Zählt Entitäten
+    # Zähle Entitäten
     stats = {
         "skills": db.query(func.count(crud.models.Skill.id)).scalar(),
         "problems": db.query(func.count(crud.models.Problem.id)).scalar(),
@@ -113,11 +117,67 @@ async def get_system_stats():
     
     return stats
 
-# Include Routers 
-# app.include_router(auth_routes.router, prefix="/api/auth", tags=["authentication"])
-app.include_router(student_routes.router, prefix="/api/students", tags=["students"])
-# app.include_router(skill_routes.router, prefix="/api/skills", tags=["skills"])
-# app.include_router(recommendation_routes.router, prefix="/api/recommendations", tags=["recommendations"])
+# Debug Endpoint - zeigt alle registrierten Routes
+@app.get("/debug/routes")
+async def debug_routes():
+    """Zeigt alle registrierten API Routes."""
+    routes = []
+    for route in app.routes:
+        if hasattr(route, "path") and hasattr(route, "methods"):
+            routes.append({
+                "path": route.path,
+                "methods": list(route.methods) if route.methods else [],
+                "name": route.name
+            })
+    return {"total_routes": len(routes), "routes": sorted(routes, key=lambda x: x["path"])}
+
+@app.get("/debug/database")
+async def debug_database():
+    """Debug-Endpoint zum Prüfen der Datenbankdaten."""
+    from database.db_setup import SessionLocal
+    from database import crud
+    
+    db = SessionLocal()
+    
+    # Teste get_class
+    class_1 = crud.get_class(db, 1)
+    
+    # Teste get_student
+    student_1 = crud.get_student(db, 1)
+    
+    # Teste get_students_by_class
+    students_in_class_1 = crud.get_students_by_class(db, 1)
+    
+    result = {
+        "class_1_exists": class_1 is not None,
+        "class_1_data": {
+            "id": class_1.id,
+            "name": class_1.name,
+            "teacher_id": class_1.teacher_id
+        } if class_1 else None,
+        "student_1_exists": student_1 is not None,
+        "student_1_data": {
+            "id": student_1.id,
+            "name": f"{student_1.first_name} {student_1.last_name}",
+            "class_id": student_1.class_id
+        } if student_1 else None,
+        "students_in_class_1": len(students_in_class_1),
+        "students_list": [
+            {"id": s.id, "name": f"{s.first_name} {s.last_name}"}
+            for s in students_in_class_1
+        ]
+    }
+    
+    db.close()
+    return result
+
+# Include Routers
+try:
+    from api import student_routes
+    app.include_router(student_routes.router, prefix="/api", tags=["students"])
+    logger.info("Student routes loaded successfully")
+except ImportError as e:
+    logger.error(f"Could not load student routes: {e}")
 
 # Beispiel API Endpoints (entferne diese, wenn du echte Router hast)
 
@@ -143,45 +203,29 @@ async def get_skills(skip: int = 0, limit: int = 10):
     db.close()
     return result
 
-@app.get("/api/students/{student_id}")
-async def get_student(student_id: int):
-    """Ruft einen Schüler ab."""
-    from database.db_setup import SessionLocal
-    from database import crud
-    from fastapi import HTTPException
-    
-    db = SessionLocal()
-    student = crud.get_student(db, student_id)
-    
-    if not student:
-        db.close()
-        raise HTTPException(status_code=404, detail="Student nicht gefunden")
-    
-    result = {
-        "id": student.id,
-        "first_name": student.first_name,
-        "last_name": student.last_name,
-        "class_id": student.class_id,
-        "created_at": student.created_at.isoformat() if student.created_at else None
-    }
-    
-    db.close()
-    return result
-
 # Error Handlers
-@app.exception_handler(404)
-async def not_found_handler(request, exc):
-    return JSONResponse( 
-        status_code=404,
-        content={"error": "Ressource nicht gefunden", "detail": str(exc)} 
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": exc.detail,
+            "status_code": exc.status_code,
+            "path": str(request.url.path),
+            "method": request.method
+        }
     )
 
-@app.exception_handler(500)
-async def internal_error_handler(request, exc):
-    logger.error(f"Internal error: {exc}")
-    return JSONResponse( 
-        status_code=500,
-        content={"error": "Interner Serverfehler", "detail": str(exc)} 
+@app.exception_handler(404)
+async def not_found_handler(request: Request, exc):
+    return JSONResponse(
+        status_code=404,
+        content={
+            "error": "Endpoint nicht gefunden",
+            "path": str(request.url.path),
+            "method": request.method,
+            "detail": "Der angeforderte Endpoint existiert nicht"
+        }
     )
 
 if __name__ == "__main__":
