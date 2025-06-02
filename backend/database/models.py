@@ -35,10 +35,8 @@ class Student(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     is_deleted = Column(Boolean, default=False)
     deleted_at = Column(DateTime(timezone=True), nullable=True)
-
     class_ = relationship("Class", back_populates="students") 
     interactions = relationship("Interaction", back_populates="student")
-    recommendation_reports = relationship("RecommendationReport", back_populates="student")
 
 class Skill(Base): 
     __tablename__ = "skills"
@@ -48,7 +46,6 @@ class Skill(Base):
     original_skill_id = Column(String, nullable=False, index=True) 
     name = Column(String, nullable=False, unique=True)
     problems = relationship("Problem", back_populates="skill")
-    probe_questions = relationship("ProbeQuestionEntry", back_populates="skill")
     interactions = relationship("Interaction", back_populates="skill")
 
 
@@ -76,23 +73,3 @@ class Interaction(Base):
     student = relationship("Student", back_populates="interactions")
     problem = relationship("Problem", back_populates="interactions")
     skill = relationship("Skill", back_populates="interactions")
-
-
-class ProbeQuestionEntry(Base):
-    __tablename__ = "probe_question_entries"
-
-    id = Column(Integer, primary_key=True, index=True)
-    skill_id = Column(Integer, ForeignKey("skills.id"), nullable=False)
-    problem_id = Column(Integer, ForeignKey("problems.id"), nullable=False)
-    skill = relationship("Skill", back_populates="probe_questions")
-    problem = relationship("Problem") 
-
-class RecommendationReport(Base):
-    __tablename__ = "recommendation_reports"
-
-    id = Column(Integer, primary_key=True, index=True)
-    student_id = Column(Integer, ForeignKey("students.id"), nullable=False)
-    creation_timestamp = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    content_json = Column(Text, nullable=False) 
-    teacher_comment = Column(Text, nullable=True) 
-    student = relationship("Student", back_populates="recommendation_reports")

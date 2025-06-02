@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import TYPE_CHECKING, Optional, List
+from typing import List, TYPE_CHECKING
 from datetime import datetime
 
 if TYPE_CHECKING:
@@ -16,7 +16,12 @@ class ClassRead(ClassBase):
     id: int
     teacher_id: int
     created_at: datetime
-    students: List["StudentRead"] = [] 
 
+    class Config:
+        from_attributes = True
+
+class ClassReadWithStudents(ClassRead):
+    students: List["StudentRead"] = []
+    
     class Config:
         from_attributes = True

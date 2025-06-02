@@ -11,8 +11,6 @@ from schemas.student_schemas import StudentCreate
 from schemas.skill_schemas import SkillCreate
 from schemas.problem_schemas import ProblemCreate
 from schemas.interaction_schemas import InteractionCreate, InteractionCSVRow
-from schemas.probe_question_schemas import ProbeQuestionEntryCreate
-from schemas.report_schemas import RecommendationReportCreate, ReportCommentCreate
 from sqlalchemy.orm import joinedload
 
 # Passwort-Hashing-Kontext für Teacher
@@ -287,62 +285,6 @@ def create_interaction_from_csv(db: Session, csv_row: schemas.InteractionCSVRow,
         return create_interaction(db, interaction_data, student_id)
     except ValueError:
         return None
-
-# CRUD Operationen für ProbeQuestionEntry
-def get_probe_question_entry(db: Session, entry_id: int) -> Optional[models.ProbeQuestionEntry]:
-    return db.query(models.ProbeQuestionEntry).filter(models.ProbeQuestionEntry.id == entry_id).first()
-
-def get_probe_questions_for_skill_db_id(db: Session, skill_db_id: int) -> List[models.Problem]:
-    # Gibt eine Liste von Problem-Objekten zurück, die als Probe Questions für einen Skill dienen
-    return db.query(models.Problem)\
-        .join(models.ProbeQuestionEntry)\
-        .filter(models.ProbeQuestionEntry.skill_id == skill_db_id)\
-        .all()
-
-def add_probe_question_to_skill(db: Session, probe_entry: schemas.ProbeQuestionEntryCreate) -> models.ProbeQuestionEntry:
-    db_probe_entry = models.ProbeQuestionEntry(
-        skill_id=probe_entry.skill_db_id,
-        problem_id=probe_entry.problem_db_id
-    )
-    db.add(db_probe_entry)
-    db.commit()
-    db.refresh(db_probe_entry)
-    return db_probe_entry
-
-# CRUD Operationen für RecommendationReport
-def get_report(db: Session, report_id: int) -> Optional[models.RecommendationReport]:
-    return db.query(models.RecommendationReport).filter(models.RecommendationReport.id == report_id).first()
-
-def get_reports_by_student(db: Session, student_id: int, skip: int = 0, limit: int = 10) -> List[models.RecommendationReport]:
-    return db.query(models.RecommendationReport).filter(
-        models.RecommendationReport.student_id == student_id
-    ).order_by(desc(models.RecommendationReport.creation_timestamp)).offset(skip).limit(limit).all()
-
-def create_report(db: Session, report_data: schemas.RecommendationReportCreate, student_id: int) -> models.RecommendationReport:
-    db_report = models.RecommendationReport(
-        student_id=student_id,
-        content_json=report_data.content_json,  
-        teacher_comment=report_data.teacher_comment,
-    )
-    db.add(db_report)
-    db.commit()
-    db.refresh(db_report)
-    return db_report
-
-def update_report_comment(db: Session, report_id: int, comment_data: schemas.ReportCommentCreate) -> Optional[models.RecommendationReport]:
-    db_report = get_report(db, report_id)
-    if db_report:
-        db_report.teacher_comment = comment_data.teacher_comment
-        db.commit()
-        db.refresh(db_report)
-    return db_report
-
-def delete_report(db: Session, report_id: int) -> Optional[models.RecommendationReport]:
-    db_report = get_report(db, report_id)
-    if db_report:
-        db.delete(db_report)
-        db.commit()
-    return db_report
 
 def get_student_statistics(db: Session, student_id: int) -> Dict[str, Any]:
     """

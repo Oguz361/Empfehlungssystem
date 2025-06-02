@@ -4,28 +4,30 @@ from contextlib import asynccontextmanager
 import logging
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import HTTPException
-from api import student_routes
+from services.akt_model_service import get_akt_service
+from api import import_routes, teacher_class_routes, recommendation_routes, auth_routes, student_routes
 
-# Logging Setup
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Lifespan Context Manager für Startup/Shutdown
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
+    
     logger.info("Starting Knowledge Tracing System API...")
     
-    # Hier kannst du das AKT Model laden
-    # from services.akt_model_service import get_akt_service
-    # akt_service = get_akt_service()  # Lädt Model einmal beim Start
+    try:
+        logger.info("Loading AKT Model Service...")
+        akt_service = get_akt_service()  
+        logger.info("✅ AKT Model Service loaded successfully")
+    except Exception as e:
+        logger.error(f"❌ Failed to load AKT Model Service: {e}")
+        logger.warning("Recommendation endpoints will not work!")
     
     yield
     
-    # Shutdown
     logger.info("Shutting down...")
 
-# Create FastAPI App
 app = FastAPI(
     title="Knowledge Tracing System API",
     description="Backend für AKT-basiertes Empfehlungssystem für Lehrkräfte",
@@ -34,13 +36,11 @@ app = FastAPI(
 )
 
 # CORS Middleware
+from config import settings
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",  # Vite Dev Server
-        "http://localhost:3000",  # Alternative
-        "http://localhost:8080",  # Production
-    ],
+    allow_origins=settings.backend_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -67,18 +67,17 @@ async def health_check():
     from database import crud
     
     try:
-        # Test DB Connection
         db = SessionLocal()
         skills_count = len(crud.get_skills(db, limit=1))
         
-        # Test Model Service (wenn implementiert)
+        # Test Model Service
         model_status = "not_loaded"
-        # try:
-        #     from services.akt_model_service import get_akt_service
-        #     akt = get_akt_service()
-        #     model_status = "ready"
-        # except:
-        #     model_status = "error"
+        try:
+            from services.akt_model_service import get_akt_service
+            akt = get_akt_service()
+            model_status = "ready"
+        except:
+            model_status = "error"
         
         db.close()
         
@@ -103,7 +102,6 @@ async def get_system_stats():
     
     db = SessionLocal()
     
-    # Zähle Entitäten
     stats = {
         "skills": db.query(func.count(crud.models.Skill.id)).scalar(),
         "problems": db.query(func.count(crud.models.Problem.id)).scalar(),
@@ -117,91 +115,40 @@ async def get_system_stats():
     
     return stats
 
-# Debug Endpoint - zeigt alle registrierten Routes
-@app.get("/debug/routes")
-async def debug_routes():
-    """Zeigt alle registrierten API Routes."""
-    routes = []
-    for route in app.routes:
-        if hasattr(route, "path") and hasattr(route, "methods"):
-            routes.append({
-                "path": route.path,
-                "methods": list(route.methods) if route.methods else [],
-                "name": route.name
-            })
-    return {"total_routes": len(routes), "routes": sorted(routes, key=lambda x: x["path"])}
-
-@app.get("/debug/database")
-async def debug_database():
-    """Debug-Endpoint zum Prüfen der Datenbankdaten."""
-    from database.db_setup import SessionLocal
-    from database import crud
-    
-    db = SessionLocal()
-    
-    # Teste get_class
-    class_1 = crud.get_class(db, 1)
-    
-    # Teste get_student
-    student_1 = crud.get_student(db, 1)
-    
-    # Teste get_students_by_class
-    students_in_class_1 = crud.get_students_by_class(db, 1)
-    
-    result = {
-        "class_1_exists": class_1 is not None,
-        "class_1_data": {
-            "id": class_1.id,
-            "name": class_1.name,
-            "teacher_id": class_1.teacher_id
-        } if class_1 else None,
-        "student_1_exists": student_1 is not None,
-        "student_1_data": {
-            "id": student_1.id,
-            "name": f"{student_1.first_name} {student_1.last_name}",
-            "class_id": student_1.class_id
-        } if student_1 else None,
-        "students_in_class_1": len(students_in_class_1),
-        "students_list": [
-            {"id": s.id, "name": f"{s.first_name} {s.last_name}"}
-            for s in students_in_class_1
-        ]
-    }
-    
-    db.close()
-    return result
-
-# Include Routers
+# Auth Routes (ungeschützt)
 try:
-    from api import student_routes
+    app.include_router(auth_routes.router, prefix="/api/auth", tags=["authentication"])
+    logger.info("Auth routes loaded successfully")
+except ImportError as e:
+    logger.error(f"Could not load auth routes: {e}")
+
+# Student Routes (geschützt)
+try:
     app.include_router(student_routes.router, prefix="/api", tags=["students"])
     logger.info("Student routes loaded successfully")
 except ImportError as e:
     logger.error(f"Could not load student routes: {e}")
 
-# Beispiel API Endpoints (entferne diese, wenn du echte Router hast)
+# Recommendation Routes (geschützt)
+try:
+    app.include_router(recommendation_routes.router, prefix="/api/recommendations", tags=["recommendations"])
+    logger.info("Recommendation routes loaded successfully")
+except ImportError as e:
+    logger.error(f"Could not load recommendation routes: {e}")
 
-@app.get("/api/skills")
-async def get_skills(skip: int = 0, limit: int = 10):
-    """Listet alle Skills auf."""
-    from database.db_setup import SessionLocal
-    from database import crud
-    
-    db = SessionLocal()
-    skills = crud.get_skills(db, skip=skip, limit=limit)
-    
-    result = [
-        {
-            "id": skill.id,
-            "internal_idx": skill.internal_idx,
-            "name": skill.name,
-            "original_skill_id": skill.original_skill_id
-        }
-        for skill in skills
-    ]
-    
-    db.close()
-    return result
+# Teacher & Class Management Routes (geschützt)
+try:
+    app.include_router(teacher_class_routes.router, prefix="/api", tags=["teacher", "classes"])
+    logger.info("Teacher & Class management routes loaded successfully")
+except ImportError as e:
+    logger.error(f"Could not load teacher/class routes: {e}")
+
+# Import Routes (geschützt)
+try:
+    app.include_router(import_routes.router, prefix="/api/import", tags=["import"])
+    logger.info("Import routes loaded successfully")
+except ImportError as e:
+    logger.error(f"Could not load import routes: {e}")
 
 # Error Handlers
 @app.exception_handler(HTTPException)
@@ -230,4 +177,4 @@ async def not_found_handler(request: Request, exc):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
