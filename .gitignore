@@ -6,6 +6,10 @@ backend/.env
 backend/*.db
 backend/*.json
 backend/db_init_data/*.json
+backend/__pycache__/
+*.py[cod]
+backend/config.py
+backend/test*
 
 # Frontend
 frontend/node_modules/
