@@ -4,14 +4,9 @@ import { AuthGuard } from "@/components/auth/auth-guard";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { authApi } from "@/lib/api/auth";
 import { 
-  Home,
-  Users,
-  FileUp,
   LogOut,
-  ChevronRight,
   GraduationCap
 } from "lucide-react";
 
@@ -30,22 +25,23 @@ export default function DashboardLayout({
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-gray-50">
+      {/* Hauptcontainer für die Seite, stellt sicher, dass der Hintergrund dunkel ist */}
+      <div className="min-h-screen bg-background text-foreground">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b">
+        <header className="bg-card shadow-sm border-b border-border"> {/* Farben an Darkmode angepasst */}
           <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex h-16 items-center justify-between">
               <div className="flex items-center">
                 <GraduationCap className="h-8 w-8 text-primary mr-3" />
-                <h1 className="text-xl font-semibold">Knowledge Tracing System</h1>
+                <h1 className="text-xl font-semibold text-foreground">Knowledge Tracing System</h1> {/* Textfarbe angepasst */}
               </div>
               
               <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-muted-foreground"> {/* Farbe an Darkmode angepasst */}
                   Angemeldet als <strong>{teacher?.username}</strong>
                 </span>
                 <Button
-                  variant="outline"
+                  variant="outline" // Behält Outline-Stil, der im Darkmode gut aussieht
                   size="sm"
                   onClick={handleLogout}
                   className="gap-2"
@@ -58,45 +54,13 @@ export default function DashboardLayout({
           </div>
         </header>
 
-        <div className="flex h-[calc(100vh-4rem)]">
-          {/* Sidebar */}
-          <nav className="w-64 bg-white border-r p-4">
-            <ul className="space-y-2">
-              <li>
-                <Link
-                  href="/"
-                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-                >
-                  <Home className="h-5 w-5" />
-                  Dashboard
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/classes"
-                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-                >
-                  <Users className="h-5 w-5" />
-                  Klassen
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/import"
-                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-                >
-                  <FileUp className="h-5 w-5" />
-                  Daten Import
-                </Link>
-              </li>
-            </ul>
-          </nav>
-
-          {/* Main Content */}
-          <main className="flex-1 overflow-y-auto p-8">
-            {children}
-          </main>
-        </div>
+        {/* Container für den Hauptinhalt, füllt den verfügbaren Platz */}
+        {/* Das 'flex' und 'h-[calc(100vh-4rem)]' sind nicht mehr nötig, da es keine Sidebar gibt */}
+        {/* Die innere Scrollbar wird entfernt, indem overflow-y-auto entfernt wird. */}
+        {/* Der Page-Content selbst (children) wird nun die Höhe bestimmen und die äußere Scrollbar nutzen. */}
+        <main className="p-8"> {/* Kein flex-1 oder overflow-y-auto mehr */}
+          {children}
+        </main>
       </div>
     </AuthGuard>
   );

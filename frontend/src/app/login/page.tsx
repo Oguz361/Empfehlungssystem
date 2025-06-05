@@ -17,18 +17,18 @@ export default function LoginPage() {
   }, [router]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
+    <div className="flex min-h-screen flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-background"> 
       <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center">
-          <GraduationCap className="h-12 w-12 text-primary mb-4" />
-          <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900">
+          <GraduationCap className="h-12 w-12 text-primary mb-4" /> 
+          <h2 className="text-center text-3xl font-bold tracking-tight text-foreground"> 
             Knowledge Tracing System
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-muted-foreground"> 
             Intelligente Lernanalyse mit AKT
           </p>
         </div>
-        <LoginForm />
+        <LoginForm /> 
       </div>
     </div>
   );
