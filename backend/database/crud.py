@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import desc 
+from sqlalchemy import desc, func
 from typing import List, Optional, Dict, Any 
 from datetime import datetime 
 from . import models
@@ -327,3 +327,43 @@ def get_student_statistics(db: Session, student_id: int) -> Dict[str, Any]:
         "last_activity": last_activity.isoformat() if last_activity else None,
         "activity_status": "active" if last_activity else "no_activity"
     }
+
+def get_classes_for_dashboard(db: Session, teacher_id: int, limit: int = 5) -> List[Dict[str, Any]]:
+    """
+    Ruft Klassen einer Lehrkraft mit der Anzahl der (nicht gelöschten) Schüler ab.
+    Gibt eine Liste von Dictionaries zurück, die für ClassDashboardRead geeignet sind.
+    """
+    from .models import Student, Class  
+
+    student_count_subquery = (
+        db.query(
+            Student.class_id,
+            func.count(Student.id).label("student_count")
+        )
+        .filter(Student.is_deleted == False)
+        .group_by(Student.class_id)
+        .subquery()
+    )
+
+    query_result = (
+        db.query(
+            Class.id,
+            Class.name,
+            func.coalesce(student_count_subquery.c.student_count, 0).label("student_count")
+        )
+        .outerjoin(student_count_subquery, Class.id == student_count_subquery.c.class_id)
+        .filter(Class.teacher_id == teacher_id)
+        .order_by(desc(Class.created_at)) 
+        .limit(limit)
+        .all()
+    )
+
+    dashboard_classes_data = []
+    for row in query_result:
+        dashboard_classes_data.append({
+            "id": row.id,
+            "name": row.name,
+            "student_count": row.student_count
+        })
+
+    return dashboard_classes_data

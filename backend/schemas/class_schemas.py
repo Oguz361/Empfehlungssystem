@@ -25,3 +25,11 @@ class ClassReadWithStudents(ClassRead):
     
     class Config:
         from_attributes = True
+
+class ClassDashboardRead(BaseModel):
+    id: int
+    name: str
+    student_count: int
+
+    class Config:
+        from_attributes = True        

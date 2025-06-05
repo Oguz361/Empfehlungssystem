@@ -9,7 +9,8 @@ from .teacher_schemas import (
 from .class_schemas import (
     ClassBase,
     ClassCreate,
-    ClassRead
+    ClassRead,
+    ClassDashboardRead
 )
 
 # Student Schemas
@@ -54,7 +55,7 @@ __all__ = [
     # Teacher
     'TeacherBase', 'TeacherCreate', 'TeacherRead',
     # Class
-    'ClassBase', 'ClassCreate', 'ClassRead',
+    'ClassBase', 'ClassCreate', 'ClassRead','ClassDashboardRead',
     # Student
     'StudentBase', 'StudentCreate', 'StudentRead',
     # Skill
@@ -66,4 +67,5 @@ __all__ = [
     # Recommendation
     'ConceptMasteryData', 'MasteryProfileResponse', 'DifficultyPrognosisData',
     'ConceptPrognosisResponse'
+
 ]
