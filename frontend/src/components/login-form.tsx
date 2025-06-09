@@ -114,12 +114,6 @@ export function LoginForm() {
               )}
             </Button>
           </form>
-          
-          <div className="mt-4 text-center text-sm text-muted-foreground">
-            Demo-Zugangsdaten:<br />
-            Benutzername: <code className="font-mono">demo_teacher</code><br />
-            Passwort: <code className="font-mono">demo123</code>
-          </div>
         </div>
       </CardContent>
     </Card>

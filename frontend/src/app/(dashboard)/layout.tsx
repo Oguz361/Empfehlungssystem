@@ -4,6 +4,7 @@ import { AuthGuard } from "@/components/auth/auth-guard";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { authApi } from "@/lib/api/auth";
 import { 
   LogOut,
@@ -25,26 +26,26 @@ export default function DashboardLayout({
 
   return (
     <AuthGuard>
-      {/* Hauptcontainer für die Seite, stellt sicher, dass der Hintergrund dunkel ist */}
+      {/* Hauptcontainer für die Seite */}
       <div className="min-h-screen bg-background text-foreground">
         {/* Header */}
-        <header className="bg-card shadow-sm border-b border-border"> {/* Farben an Darkmode angepasst */}
+        <header className="bg-transparent border-b border-border"> 
           <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex h-16 items-center justify-between">
-              <div className="flex items-center">
-                <GraduationCap className="h-8 w-8 text-primary mr-3" />
-                <h1 className="text-xl font-semibold text-foreground">Knowledge Tracing System</h1> {/* Textfarbe angepasst */}
-              </div>
+              <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
+                <GraduationCap className="h-8 w-8 text-primary" />
+                <h1 className="text-xl font-semibold text-foreground">Knowledge Tracing System</h1>
+              </Link>
               
               <div className="flex items-center gap-4">
-                <span className="text-sm text-muted-foreground"> {/* Farbe an Darkmode angepasst */}
+                <span className="text-sm text-muted-foreground">
                   Angemeldet als <strong>{teacher?.username}</strong>
                 </span>
                 <Button
-                  variant="outline" // Behält Outline-Stil, der im Darkmode gut aussieht
+                  variant="outline" 
                   size="sm"
                   onClick={handleLogout}
-                  className="gap-2"
+                  className="gap-2 cursor-pointer"
                 >
                   <LogOut className="h-4 w-4" />
                   Abmelden
@@ -53,12 +54,7 @@ export default function DashboardLayout({
             </div>
           </div>
         </header>
-
-        {/* Container für den Hauptinhalt, füllt den verfügbaren Platz */}
-        {/* Das 'flex' und 'h-[calc(100vh-4rem)]' sind nicht mehr nötig, da es keine Sidebar gibt */}
-        {/* Die innere Scrollbar wird entfernt, indem overflow-y-auto entfernt wird. */}
-        {/* Der Page-Content selbst (children) wird nun die Höhe bestimmen und die äußere Scrollbar nutzen. */}
-        <main className="p-8"> {/* Kein flex-1 oder overflow-y-auto mehr */}
+        <main className="p-8"> 
           {children}
         </main>
       </div>

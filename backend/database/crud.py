@@ -68,9 +68,21 @@ def delete_class(db: Session, class_id: int) -> Optional[models.Class]:
     if not db_class:
         return None
     
-    student_count = db.query(models.Student).filter(models.Student.class_id == class_id).count()
-    if student_count > 0:
-        raise ValueError(f"Klasse kann nicht gelöscht werden. Bitte erst die {student_count} löschen.")
+    active_student_count = db.query(models.Student).filter(
+        models.Student.class_id == class_id,
+        models.Student.is_deleted == False
+    ).count()
+    
+    if active_student_count > 0:
+        raise ValueError(f"Klasse kann nicht gelöscht werden. Bitte erst die {active_student_count} Schüler löschen.")
+    
+    deleted_students = db.query(models.Student).filter(
+        models.Student.class_id == class_id,
+        models.Student.is_deleted == True
+    ).all()
+    
+    for student in deleted_students:
+        db.delete(student)
     
     db.delete(db_class)
     db.commit()

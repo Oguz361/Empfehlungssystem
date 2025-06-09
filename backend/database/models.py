@@ -36,7 +36,7 @@ class Student(Base):
     is_deleted = Column(Boolean, default=False)
     deleted_at = Column(DateTime(timezone=True), nullable=True)
     class_ = relationship("Class", back_populates="students") 
-    interactions = relationship("Interaction", back_populates="student")
+    interactions = relationship("Interaction", back_populates="student", cascade="all, delete-orphan")
 
 class Skill(Base): 
     __tablename__ = "skills"

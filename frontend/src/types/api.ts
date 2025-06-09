@@ -43,6 +43,12 @@ export interface ClassCreate {
   description: string;
 }
 
+export interface ClassDashboardRead {
+  id: number;
+  name: string;
+  student_count: number;
+}
+
 // Student Types
 export interface StudentRead {
   id: number;
