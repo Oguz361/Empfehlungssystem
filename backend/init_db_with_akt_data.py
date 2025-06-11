@@ -12,8 +12,7 @@ def init_database_with_akt_data():
     
     # Laden der Mappings
     print("Lade AKT Mappings...")
-    with open('akt_model_mappings.json', 'r', encoding='utf-8') as f:
-        mappings = json.load(f)
+    with open('ml_models/akt_model_mappings.json', 'r', encoding='utf-8') as f:        mappings = json.load(f)
     
     skill_to_idx = mappings["skill_to_idx"]
     problem_to_idx = mappings["problem_to_idx"]

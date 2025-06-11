@@ -10,6 +10,7 @@ backend/__pycache__/
 *.py[cod]
 backend/config.py
 backend/test*
+backend/dataGenerator.py
 
 # Frontend
 frontend/node_modules/

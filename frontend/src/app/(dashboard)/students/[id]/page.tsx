@@ -25,6 +25,7 @@ import { studentsApi } from "@/lib/api/students";
 import { StudentRead } from "@/types/api";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import toast from "react-hot-toast";
+import { StudentRecommendations } from "@/components/recommendations/student-recommendations";
 
 interface StudentStats {
   total_interactions: number;
