@@ -11,12 +11,14 @@ backend/__pycache__/
 backend/config.py
 backend/test*
 backend/dataGenerator.py
+backend/ml_models/
 
 # Frontend
 frontend/node_modules/
 frontend/dist/
 frontend/build/
 frontend/.env.local
+frontend/package-lock.json
 
 # Allgemein
 .DS_Store
