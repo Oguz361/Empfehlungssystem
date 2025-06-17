@@ -1,0 +1,1 @@
+from .akt_model_service import get_akt_service

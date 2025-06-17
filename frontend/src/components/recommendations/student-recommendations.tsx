@@ -44,7 +44,7 @@ import {
   ResponsiveContainer,
   Cell
 } from 'recharts';
-import { recommendationsApi, SkillMastery, ProblemRecommendation } from "@/lib/api/recommendations";
+import { recommendationsApi } from "@/lib/api/recommendations";
 import toast from "react-hot-toast";
 
 interface RecommendationConfig {
@@ -87,8 +87,8 @@ export function StudentRecommendations({
 }: StudentRecommendationsProps) {
   const [configOpen, setConfigOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [masteryData, setMasteryData] = useState<SkillMastery[] | null>(null);
-  const [recommendations, setRecommendations] = useState<ProblemRecommendation[] | null>(null);
+  const [masteryData, setMasteryData] = useState<any[] | null>(null);
+  const [recommendations, setRecommendations] = useState<any[] | null>(null);
   const [overallMastery, setOverallMastery] = useState<number>(0);
   
   const [config, setConfig] = useState<RecommendationConfig>({
@@ -106,24 +106,77 @@ export function StudentRecommendations({
 
     try {
       // Fetch mastery profile
+      console.log("Fetching mastery profile for student:", studentId);
       const masteryResponse = await recommendationsApi.getStudentMasteryProfile(studentId);
-      setMasteryData(masteryResponse.skill_mastery);
-      setOverallMastery(masteryResponse.overall_mastery);
+      console.log("Mastery response:", masteryResponse);
+      
+      // Check if profile_data exists and has content
+      if (!masteryResponse.profile_data || masteryResponse.profile_data.length === 0) {
+        console.warn("No profile data received");
+        toast.error("Keine Skill-Daten vorhanden. Bitte importieren Sie weitere Interaktionen.");
+        setLoading(false);
+        return;
+      }
+      
+      // Convert profile_data to the format expected by visualizations
+      const convertedMasteryData = masteryResponse.profile_data.map(skill => ({
+        skill_id: skill.concept_db_id,
+        skill_name: skill.concept_name,
+        mastery: skill.mastery_score || 0.5,
+        attempt_count: skill.probes_evaluated,
+        correct_count: Math.round((skill.mastery_score || 0.5) * skill.probes_evaluated)
+      }));
+      
+      console.log("Converted mastery data:", convertedMasteryData);
+      setMasteryData(convertedMasteryData);
+      
+      // Calculate overall mastery
+      const avgMastery = convertedMasteryData.length > 0
+        ? convertedMasteryData.reduce((sum, s) => sum + s.mastery, 0) / convertedMasteryData.length
+        : 0;
+      setOverallMastery(avgMastery);
 
       // Fetch recommendations based on config
-      const excludeDays = config.timeRange === '12weeks' ? 84 : undefined;
+      console.log("Fetching recommendations with config:", config);
       const recsResponse = await recommendationsApi.getRecommendedProblems(
         studentId,
         config.difficulty,
-        5,
-        excludeDays
+        5
       );
-      setRecommendations(recsResponse.recommendations);
+      console.log("Recommendations response:", recsResponse);
+      
+      // Check if recommendations exist
+      if (!recsResponse.recommendations || recsResponse.recommendations.length === 0) {
+        console.warn("No recommendations received");
+        toast("Keine passenden Empfehlungen gefunden. Versuchen Sie einen anderen Schwierigkeitsgrad.");
+      }
+      
+      // Add recommendation reason based on difficulty
+      const enhancedRecommendations = recsResponse.recommendations.map(rec => ({
+        ...rec,
+        recommendation_reason: `${DIFFICULTY_INFO[config.difficulty].label}: ${
+          config.difficulty === 'easy' 
+            ? 'Diese Aufgabe festigt bereits Gelerntes'
+            : config.difficulty === 'optimal'
+            ? 'Diese Aufgabe liegt in der optimalen Lernzone'
+            : 'Diese Aufgabe stellt eine angemessene Herausforderung dar'
+        }`
+      }));
+      
+      setRecommendations(enhancedRecommendations);
 
       toast.success("Empfehlungen erfolgreich generiert!");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to generate recommendations:", error);
-      toast.error("Fehler beim Generieren der Empfehlungen");
+      
+      // Provide more specific error messages
+      if (error.response?.status === 404) {
+        toast.error("Keine Empfehlungen möglich - zu wenige Daten vorhanden");
+      } else if (error.response?.data?.detail) {
+        toast.error(error.response.data.detail);
+      } else {
+        toast.error("Fehler beim Generieren der Empfehlungen");
+      }
     } finally {
       setLoading(false);
     }
@@ -402,7 +455,7 @@ export function StudentRecommendations({
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <span className="font-medium">#{index + 1}</span>
-                          <span className="text-sm font-medium">{rec.skill_name}</span>
+                          <span className="text-sm font-medium">{rec.skill.name}</span>
                           <Badge variant="outline" className="text-xs">
                             Problem {rec.original_problem_id}
                           </Badge>
@@ -416,9 +469,21 @@ export function StudentRecommendations({
                           <div className="flex items-center gap-1">
                             <TrendingUp className="h-4 w-4 text-muted-foreground" />
                             <span className="text-sm">
-                              Erfolgswahrscheinlichkeit: {Math.round(rec.predicted_probability * 100)}%
+                              Erfolgswahrscheinlichkeit: {Math.round(rec.predicted_success * 100)}%
                             </span>
                           </div>
+                          <Badge 
+                            variant="outline"
+                            className={`text-xs ${
+                              rec.difficulty_category === 'sehr_einfach' || rec.difficulty_category === 'einfach' 
+                                ? 'text-green-600 border-green-600' 
+                                : rec.difficulty_category === 'mittel' 
+                                ? 'text-yellow-600 border-yellow-600'
+                                : 'text-orange-600 border-orange-600'
+                            }`}
+                          >
+                            {rec.difficulty_category.replace('_', ' ')}
+                          </Badge>
                         </div>
                         <p className="text-xs text-muted-foreground italic mt-1">
                           {rec.recommendation_reason}

@@ -395,59 +395,11 @@ export default function StudentDetailPage() {
         </TabsContent>
 
         <TabsContent value="recommendations">
-          <Card>
-            <CardHeader>
-              <CardTitle>Empfehlungen generieren</CardTitle>
-              <CardDescription>
-                Personalisierte Aufgabenempfehlungen basierend auf dem Lernverlauf
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {stats.total_interactions >= 5 ? (
-                <div className="text-center py-8">
-                  <Target className="mx-auto h-12 w-12 text-primary mb-4" />
-                  <p className="text-lg font-medium mb-4">
-                    Empfehlungssystem bereit
-                  </p>
-                  <p className="text-muted-foreground mb-6">
-                    Basierend auf {stats.total_interactions} Interaktionen können wir personalisierte Empfehlungen erstellen.
-                  </p>
-                  <Button 
-                    size="lg" 
-                    className="cursor-pointer"
-                    onClick={() => toast("Empfehlungs-Feature kommt als nächstes!")}
-                  >
-                    <Brain className="mr-2 h-5 w-5" />
-                    Empfehlungen konfigurieren
-                  </Button>
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Activity className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                  <p className="text-lg font-medium mb-2">Mehr Daten benötigt</p>
-                  <p className="mb-4">
-                    Mindestens 5 Interaktionen werden für Empfehlungen benötigt.
-                    <br />
-                    Aktuell: {stats.total_interactions} von 5
-                  </p>
-                  <div className="w-48 mx-auto bg-secondary rounded-full h-2 mb-6">
-                    <div
-                      className="h-2 rounded-full bg-primary transition-all"
-                      style={{ width: `${(stats.total_interactions / 5) * 100}%` }}
-                    />
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => router.push(`/import?class_id=${student.class_id}&student_id=${student.id}`)}
-                    className="cursor-pointer"
-                  >
-                    Weitere Daten importieren
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <StudentRecommendations 
+            studentId={studentId}
+            studentName={`${student.first_name} ${student.last_name}`}
+            totalInteractions={stats.total_interactions}
+          />
         </TabsContent>
       </Tabs>
     </div>
