@@ -222,15 +222,6 @@ export default function DashboardPage() {
               </div>
             </Link>
           </Button>
-          <Button variant="outline" className="h-auto py-4 flex-col items-start cursor-not-allowed opacity-60">
-             <div className="flex items-center gap-3 w-full text-left">
-                <BarChart3 className="h-7 w-7 text-muted-foreground mb-1 flex-shrink-0" />
-                <div>
-                    <span className="font-semibold text-muted-foreground">Analysen & Berichte</span>
-                    <p className="text-xs text-muted-foreground">Detaillierte Auswertungen (bald verfügbar).</p>
-                </div>
-             </div>
-          </Button>
         </CardContent>
       </Card>
     </div>

@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -17,9 +23,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  Brain, 
-  Target, 
+import {
+  Brain,
+  Target,
   TrendingUp,
   BarChart3,
   Grid3x3,
@@ -28,7 +34,7 @@ import {
   CheckCircle,
   AlertCircle,
   Info,
-  Activity
+  Activity,
 } from "lucide-react";
 import {
   Radar,
@@ -42,15 +48,15 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Cell
-} from 'recharts';
+  Cell,
+} from "recharts";
 import { recommendationsApi } from "@/lib/api/recommendations";
 import toast from "react-hot-toast";
 
 interface RecommendationConfig {
-  timeRange: 'all' | '12weeks';
-  visualization: 'radar' | 'bar' | 'table';
-  difficulty: 'easy' | 'optimal' | 'challenge';
+  timeRange: "all" | "12weeks";
+  visualization: "radar" | "bar" | "table";
+  difficulty: "easy" | "optimal" | "challenge";
 }
 
 interface StudentRecommendationsProps {
@@ -68,8 +74,9 @@ const DIFFICULTY_INFO = {
   },
   optimal: {
     label: "Optimal",
-    description: "50-70% Erfolgswahrscheinlichkeit - Zone der nächsten Entwicklung",
-    color: "text-blue-600", 
+    description:
+      "50-70% Erfolgswahrscheinlichkeit - Zone der nächsten Entwicklung",
+    color: "text-blue-600",
     bgColor: "bg-blue-100",
   },
   challenge: {
@@ -77,24 +84,24 @@ const DIFFICULTY_INFO = {
     description: "30-50% Erfolgswahrscheinlichkeit - Anspruchsvolle Aufgaben",
     color: "text-orange-600",
     bgColor: "bg-orange-100",
-  }
+  },
 };
 
-export function StudentRecommendations({ 
-  studentId, 
+export function StudentRecommendations({
+  studentId,
   studentName,
-  totalInteractions 
+  totalInteractions,
 }: StudentRecommendationsProps) {
   const [configOpen, setConfigOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [masteryData, setMasteryData] = useState<any[] | null>(null);
   const [recommendations, setRecommendations] = useState<any[] | null>(null);
   const [overallMastery, setOverallMastery] = useState<number>(0);
-  
+
   const [config, setConfig] = useState<RecommendationConfig>({
-    timeRange: 'all',
-    visualization: 'radar',
-    difficulty: 'optimal'
+    timeRange: "all",
+    visualization: "radar",
+    difficulty: "optimal",
   });
 
   // Check if student has enough data
@@ -107,33 +114,46 @@ export function StudentRecommendations({
     try {
       // Fetch mastery profile
       console.log("Fetching mastery profile for student:", studentId);
-      const masteryResponse = await recommendationsApi.getStudentMasteryProfile(studentId);
+      const masteryResponse = await recommendationsApi.getStudentMasteryProfile(
+        studentId
+      );
       console.log("Mastery response:", masteryResponse);
-      
+
       // Check if profile_data exists and has content
-      if (!masteryResponse.profile_data || masteryResponse.profile_data.length === 0) {
+      if (
+        !masteryResponse.profile_data ||
+        masteryResponse.profile_data.length === 0
+      ) {
         console.warn("No profile data received");
-        toast.error("Keine Skill-Daten vorhanden. Bitte importieren Sie weitere Interaktionen.");
+        toast.error(
+          "Keine Skill-Daten vorhanden. Bitte importieren Sie weitere Interaktionen."
+        );
         setLoading(false);
         return;
       }
-      
+
       // Convert profile_data to the format expected by visualizations
-      const convertedMasteryData = masteryResponse.profile_data.map(skill => ({
-        skill_id: skill.concept_db_id,
-        skill_name: skill.concept_name,
-        mastery: skill.mastery_score || 0.5,
-        attempt_count: skill.probes_evaluated,
-        correct_count: Math.round((skill.mastery_score || 0.5) * skill.probes_evaluated)
-      }));
-      
+      const convertedMasteryData = masteryResponse.profile_data.map(
+        (skill) => ({
+          skill_id: skill.concept_db_id,
+          skill_name: skill.concept_name,
+          mastery: skill.mastery_score || 0.5,
+          attempt_count: skill.probes_evaluated,
+          correct_count: Math.round(
+            (skill.mastery_score || 0.5) * skill.probes_evaluated
+          ),
+        })
+      );
+
       console.log("Converted mastery data:", convertedMasteryData);
       setMasteryData(convertedMasteryData);
-      
+
       // Calculate overall mastery
-      const avgMastery = convertedMasteryData.length > 0
-        ? convertedMasteryData.reduce((sum, s) => sum + s.mastery, 0) / convertedMasteryData.length
-        : 0;
+      const avgMastery =
+        convertedMasteryData.length > 0
+          ? convertedMasteryData.reduce((sum, s) => sum + s.mastery, 0) /
+            convertedMasteryData.length
+          : 0;
       setOverallMastery(avgMastery);
 
       // Fetch recommendations based on config
@@ -144,31 +164,40 @@ export function StudentRecommendations({
         5
       );
       console.log("Recommendations response:", recsResponse);
-      
+
       // Check if recommendations exist
-      if (!recsResponse.recommendations || recsResponse.recommendations.length === 0) {
+      if (
+        !recsResponse.recommendations ||
+        recsResponse.recommendations.length === 0
+      ) {
         console.warn("No recommendations received");
-        toast("Keine passenden Empfehlungen gefunden. Versuchen Sie einen anderen Schwierigkeitsgrad.");
+        toast(
+          "Keine passenden Empfehlungen gefunden. Versuchen Sie einen anderen Schwierigkeitsgrad."
+        );
       }
-      
+
       // Add recommendation reason based on difficulty
-      const enhancedRecommendations = recsResponse.recommendations.map(rec => ({
-        ...rec,
-        recommendation_reason: `${DIFFICULTY_INFO[config.difficulty].label}: ${
-          config.difficulty === 'easy' 
-            ? 'Diese Aufgabe festigt bereits Gelerntes'
-            : config.difficulty === 'optimal'
-            ? 'Diese Aufgabe liegt in der optimalen Lernzone'
-            : 'Diese Aufgabe stellt eine angemessene Herausforderung dar'
-        }`
-      }));
-      
+      const enhancedRecommendations = recsResponse.recommendations.map(
+        (rec) => ({
+          ...rec,
+          recommendation_reason: `${
+            DIFFICULTY_INFO[config.difficulty].label
+          }: ${
+            config.difficulty === "easy"
+              ? "Diese Aufgabe festigt bereits Gelerntes"
+              : config.difficulty === "optimal"
+              ? "Diese Aufgabe liegt in der optimalen Lernzone"
+              : "Diese Aufgabe stellt eine angemessene Herausforderung dar"
+          }`,
+        })
+      );
+
       setRecommendations(enhancedRecommendations);
 
       toast.success("Empfehlungen erfolgreich generiert!");
     } catch (error: any) {
       console.error("Failed to generate recommendations:", error);
-      
+
       // Provide more specific error messages
       if (error.response?.status === 404) {
         toast.error("Keine Empfehlungen möglich - zu wenige Daten vorhanden");
@@ -194,36 +223,37 @@ export function StudentRecommendations({
     }
 
     // Prepare data for charts
-    const chartData = masteryData.map(skill => ({
-      skill: skill.skill_name.length > 20 
-        ? skill.skill_name.substring(0, 20) + '...' 
-        : skill.skill_name,
+    const chartData = masteryData.map((skill) => ({
+      skill:
+        skill.skill_name.length > 20
+          ? skill.skill_name.substring(0, 20) + "..."
+          : skill.skill_name,
       fullName: skill.skill_name,
       mastery: Math.round(skill.mastery * 100),
-      attempts: skill.attempt_count
+      attempts: skill.attempt_count,
     }));
 
     // Color based on mastery level
     const getColor = (mastery: number) => {
-      if (mastery >= 70) return '#10b981'; // green
-      if (mastery >= 40) return '#f59e0b'; // yellow
-      return '#ef4444'; // red
+      if (mastery >= 70) return "#10b981"; // green
+      if (mastery >= 40) return "#f59e0b"; // yellow
+      return "#ef4444"; // red
     };
 
     switch (config.visualization) {
-      case 'radar':
+      case "radar":
         return (
           <ResponsiveContainer width="100%" height={400}>
             <RadarChart data={chartData}>
               <PolarGrid strokeDasharray="3 3" />
-              <PolarAngleAxis 
-                dataKey="skill" 
+              <PolarAngleAxis
+                dataKey="skill"
                 tick={{ fontSize: 12 }}
                 className="text-muted-foreground"
               />
-              <PolarRadiusAxis 
-                angle={90} 
-                domain={[0, 100]} 
+              <PolarRadiusAxis
+                angle={90}
+                domain={[0, 100]}
                 tick={{ fontSize: 10 }}
               />
               <Radar
@@ -233,7 +263,7 @@ export function StudentRecommendations({
                 fill="#3b82f6"
                 fillOpacity={0.6}
               />
-              <Tooltip 
+              <Tooltip
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
                     const data = payload[0].payload;
@@ -254,22 +284,22 @@ export function StudentRecommendations({
           </ResponsiveContainer>
         );
 
-      case 'bar':
+      case "bar":
         return (
           <ResponsiveContainer width="100%" height={400}>
-            <BarChart 
-              data={chartData} 
-              layout="horizontal"
+            <BarChart
+              data={chartData}
+              layout="vertical"
               margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
             >
               <XAxis type="number" domain={[0, 100]} />
-              <YAxis 
-                dataKey="skill" 
+              <YAxis
+                dataKey="skill"
                 type="category"
                 tick={{ fontSize: 12 }}
                 width={90}
               />
-              <Tooltip 
+              <Tooltip
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
                     const data = payload[0].payload;
@@ -286,7 +316,8 @@ export function StudentRecommendations({
                   return null;
                 }}
               />
-              <Bar dataKey="mastery">
+              <Bar dataKey="mastery" fill="#3b82f6">
+                {" "}
                 {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={getColor(entry.mastery)} />
                 ))}
@@ -295,7 +326,7 @@ export function StudentRecommendations({
           </ResponsiveContainer>
         );
 
-      case 'table':
+      case "table":
         return (
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -312,12 +343,14 @@ export function StudentRecommendations({
                   <tr key={skill.skill_id} className="border-b">
                     <td className="p-2">{skill.skill_name}</td>
                     <td className="p-2 text-center">
-                      <Badge 
+                      <Badge
                         variant="outline"
                         className={`${
-                          skill.mastery >= 0.7 ? 'text-green-600 border-green-600' :
-                          skill.mastery >= 0.4 ? 'text-yellow-600 border-yellow-600' :
-                          'text-red-600 border-red-600'
+                          skill.mastery >= 0.7
+                            ? "text-green-600 border-green-600"
+                            : skill.mastery >= 0.4
+                            ? "text-yellow-600 border-yellow-600"
+                            : "text-red-600 border-red-600"
                         }`}
                       >
                         {Math.round(skill.mastery * 100)}%
@@ -344,7 +377,10 @@ export function StudentRecommendations({
           <br />
           Aktuell: {totalInteractions} von 5
         </p>
-        <Progress value={(totalInteractions / 5) * 100} className="w-48 mx-auto" />
+        <Progress
+          value={(totalInteractions / 5) * 100}
+          className="w-48 mx-auto"
+        />
       </div>
     );
   }
@@ -355,14 +391,12 @@ export function StudentRecommendations({
       {!masteryData && !loading && (
         <div className="text-center py-8">
           <Target className="mx-auto h-12 w-12 text-primary mb-4" />
-          <p className="text-lg font-medium mb-4">
-            Empfehlungssystem bereit
-          </p>
+          <p className="text-lg font-medium mb-4">Empfehlungssystem bereit</p>
           <p className="text-muted-foreground mb-6">
             Konfigurieren Sie die Empfehlungsparameter für {studentName}
           </p>
-          <Button 
-            size="lg" 
+          <Button
+            size="lg"
             onClick={() => setConfigOpen(true)}
             className="cursor-pointer"
           >
@@ -378,7 +412,9 @@ export function StudentRecommendations({
           <div className="text-center py-8">
             <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary mb-4" />
             <p className="text-lg font-medium">Generiere Empfehlungen...</p>
-            <p className="text-muted-foreground">Dies kann einen Moment dauern</p>
+            <p className="text-muted-foreground">
+              Dies kann einen Moment dauern
+            </p>
           </div>
           <Skeleton className="h-64 w-full" />
           <Skeleton className="h-48 w-full" />
@@ -391,13 +427,17 @@ export function StudentRecommendations({
           {/* Header with regenerate button */}
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold">Empfehlungen für {studentName}</h3>
+              <h3 className="text-lg font-semibold">
+                Empfehlungen für {studentName}
+              </h3>
               <p className="text-sm text-muted-foreground">
-                Basierend auf {config.timeRange === 'all' ? 'allen' : 'den letzten 12 Wochen'} Interaktionen
+                Basierend auf{" "}
+                {config.timeRange === "all" ? "allen" : "den letzten 12 Wochen"}{" "}
+                Interaktionen
               </p>
             </div>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               onClick={() => setConfigOpen(true)}
               className="cursor-pointer"
@@ -431,9 +471,7 @@ export function StudentRecommendations({
                 Übersicht über alle geübten Fähigkeiten
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              {renderMasteryVisualization()}
-            </CardContent>
+            <CardContent>{renderMasteryVisualization()}</CardContent>
           </Card>
 
           {/* Recommended Problems */}
@@ -442,7 +480,8 @@ export function StudentRecommendations({
               <CardHeader>
                 <CardTitle>Empfohlene Aufgaben</CardTitle>
                 <CardDescription>
-                  Top 5 Aufgaben - Modus: {DIFFICULTY_INFO[config.difficulty].label}
+                  Top 5 Aufgaben - Modus:{" "}
+                  {DIFFICULTY_INFO[config.difficulty].label}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -455,7 +494,9 @@ export function StudentRecommendations({
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <span className="font-medium">#{index + 1}</span>
-                          <span className="text-sm font-medium">{rec.skill.name}</span>
+                          <span className="text-sm font-medium">
+                            {rec.skill.name}
+                          </span>
                           <Badge variant="outline" className="text-xs">
                             Problem {rec.original_problem_id}
                           </Badge>
@@ -469,20 +510,22 @@ export function StudentRecommendations({
                           <div className="flex items-center gap-1">
                             <TrendingUp className="h-4 w-4 text-muted-foreground" />
                             <span className="text-sm">
-                              Erfolgswahrscheinlichkeit: {Math.round(rec.predicted_success * 100)}%
+                              Erfolgswahrscheinlichkeit:{" "}
+                              {Math.round(rec.predicted_success * 100)}%
                             </span>
                           </div>
-                          <Badge 
+                          <Badge
                             variant="outline"
                             className={`text-xs ${
-                              rec.difficulty_category === 'sehr_einfach' || rec.difficulty_category === 'einfach' 
-                                ? 'text-green-600 border-green-600' 
-                                : rec.difficulty_category === 'mittel' 
-                                ? 'text-yellow-600 border-yellow-600'
-                                : 'text-orange-600 border-orange-600'
+                              rec.difficulty_category === "sehr_einfach" ||
+                              rec.difficulty_category === "einfach"
+                                ? "text-green-600 border-green-600"
+                                : rec.difficulty_category === "mittel"
+                                ? "text-yellow-600 border-yellow-600"
+                                : "text-orange-600 border-orange-600"
                             }`}
                           >
-                            {rec.difficulty_category.replace('_', ' ')}
+                            {rec.difficulty_category.replace("_", " ")}
                           </Badge>
                         </div>
                         <p className="text-xs text-muted-foreground italic mt-1">
@@ -512,9 +555,14 @@ export function StudentRecommendations({
             {/* Time Range */}
             <div className="space-y-3">
               <Label className="text-base font-medium">Zeitraum</Label>
-              <RadioGroup 
-                value={config.timeRange} 
-                onValueChange={(value) => setConfig({...config, timeRange: value as 'all' | '12weeks'})}
+              <RadioGroup
+                value={config.timeRange}
+                onValueChange={(value) =>
+                  setConfig({
+                    ...config,
+                    timeRange: value as "all" | "12weeks",
+                  })
+                }
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="all" id="all" />
@@ -524,7 +572,10 @@ export function StudentRecommendations({
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="12weeks" id="12weeks" />
-                  <Label htmlFor="12weeks" className="font-normal cursor-pointer">
+                  <Label
+                    htmlFor="12weeks"
+                    className="font-normal cursor-pointer"
+                  >
                     Letzte 12 Wochen
                   </Label>
                 </div>
@@ -534,27 +585,41 @@ export function StudentRecommendations({
             {/* Visualization */}
             <div className="space-y-3">
               <Label className="text-base font-medium">Visualisierung</Label>
-              <RadioGroup 
-                value={config.visualization} 
-                onValueChange={(value) => setConfig({...config, visualization: value as 'radar' | 'bar' | 'table'})}
+              <RadioGroup
+                value={config.visualization}
+                onValueChange={(value) =>
+                  setConfig({
+                    ...config,
+                    visualization: value as "radar" | "bar" | "table",
+                  })
+                }
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="radar" id="radar" />
-                  <Label htmlFor="radar" className="font-normal cursor-pointer flex items-center gap-2">
+                  <Label
+                    htmlFor="radar"
+                    className="font-normal cursor-pointer flex items-center gap-2"
+                  >
                     <Grid3x3 className="h-4 w-4" />
                     Radar-Diagramm
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="bar" id="bar" />
-                  <Label htmlFor="bar" className="font-normal cursor-pointer flex items-center gap-2">
+                  <Label
+                    htmlFor="bar"
+                    className="font-normal cursor-pointer flex items-center gap-2"
+                  >
                     <BarChart3 className="h-4 w-4" />
                     Balkendiagramm
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="table" id="table" />
-                  <Label htmlFor="table" className="font-normal cursor-pointer flex items-center gap-2">
+                  <Label
+                    htmlFor="table"
+                    className="font-normal cursor-pointer flex items-center gap-2"
+                  >
                     <TableIcon className="h-4 w-4" />
                     Tabelle
                   </Label>
@@ -565,16 +630,23 @@ export function StudentRecommendations({
             {/* Difficulty */}
             <div className="space-y-3">
               <Label className="text-base font-medium">Empfehlungsfokus</Label>
-              <RadioGroup 
-                value={config.difficulty} 
-                onValueChange={(value) => setConfig({...config, difficulty: value as 'easy' | 'optimal' | 'challenge'})}
+              <RadioGroup
+                value={config.difficulty}
+                onValueChange={(value) =>
+                  setConfig({
+                    ...config,
+                    difficulty: value as "easy" | "optimal" | "challenge",
+                  })
+                }
               >
                 {Object.entries(DIFFICULTY_INFO).map(([key, info]) => (
                   <div key={key} className="flex items-start space-x-2">
                     <RadioGroupItem value={key} id={key} className="mt-1" />
                     <Label htmlFor={key} className="font-normal cursor-pointer">
                       <div>
-                        <span className={`font-medium ${info.color}`}>{info.label}</span>
+                        <span className={`font-medium ${info.color}`}>
+                          {info.label}
+                        </span>
                         <p className="text-sm text-muted-foreground">
                           {info.description}
                         </p>
@@ -590,7 +662,10 @@ export function StudentRecommendations({
             <Button variant="outline" onClick={() => setConfigOpen(false)}>
               Abbrechen
             </Button>
-            <Button onClick={generateRecommendations} className="cursor-pointer">
+            <Button
+              onClick={generateRecommendations}
+              className="cursor-pointer"
+            >
               <Brain className="mr-2 h-4 w-4" />
               Empfehlungen generieren
             </Button>

@@ -227,7 +227,6 @@ export default function StudentDetailPage() {
         <TabsList>
           <TabsTrigger value="overview">Übersicht</TabsTrigger>
           <TabsTrigger value="history">Verlauf</TabsTrigger>
-          <TabsTrigger value="skills">Skills</TabsTrigger>
           <TabsTrigger value="recommendations">Empfehlungen</TabsTrigger>
         </TabsList>
 
@@ -381,19 +380,6 @@ export default function StudentDetailPage() {
             </CardContent>
           </Card>
         </TabsContent>
-
-        <TabsContent value="skills">
-          <Card>
-            <CardContent className="py-16">
-              <div className="text-center text-muted-foreground">
-                <Brain className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                <p className="text-lg font-medium mb-2">Skills-Analyse</p>
-                <p>Wird verfügbar, sobald genügend Daten vorhanden sind.</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
         <TabsContent value="recommendations">
           <StudentRecommendations 
             studentId={studentId}

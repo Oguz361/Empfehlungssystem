@@ -11,7 +11,9 @@ backend/__pycache__/
 backend/config.py
 backend/test*
 backend/dataGenerator.py
-backend/ml_models/
+backend/ml_models/akt_model_best.pth
+backend/ml_models/akt_model_mappings.json
+
 
 # Frontend
 frontend/node_modules/
