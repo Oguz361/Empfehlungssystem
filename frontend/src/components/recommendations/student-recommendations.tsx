@@ -52,6 +52,10 @@ import {
 } from "recharts";
 import { recommendationsApi } from "@/lib/api/recommendations";
 import toast from "react-hot-toast";
+import { exportRecommendationsPDF } from "@/lib/pdf-export";
+import { Download } from "lucide-react";
+import { classesApi } from "@/lib/api/classes";
+import { studentsApi } from "@/lib/api/students";
 
 interface RecommendationConfig {
   timeRange: "all" | "12weeks";
@@ -63,6 +67,7 @@ interface StudentRecommendationsProps {
   studentId: number;
   studentName: string;
   totalInteractions: number;
+  classId: number;
 }
 
 const DIFFICULTY_INFO = {
@@ -91,12 +96,16 @@ export function StudentRecommendations({
   studentId,
   studentName,
   totalInteractions,
+  classId
 }: StudentRecommendationsProps) {
   const [configOpen, setConfigOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [masteryData, setMasteryData] = useState<any[] | null>(null);
   const [recommendations, setRecommendations] = useState<any[] | null>(null);
   const [overallMastery, setOverallMastery] = useState<number>(0);
+  const [className, setClassName] = useState<string>("");
+  const [studentStats, setStudentStats] = useState<any>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const [config, setConfig] = useState<RecommendationConfig>({
     timeRange: "all",
@@ -106,6 +115,31 @@ export function StudentRecommendations({
 
   // Check if student has enough data
   const hasEnoughData = totalInteractions >= 5;
+
+  useEffect(() => {
+    const fetchClassInfo = async () => {
+      if (classId) {
+        try {
+          const classData = await classesApi.getClass(classId);
+          setClassName(classData.name);
+        } catch (error) {
+          console.error("Failed to fetch class info:", error);
+        }
+      }
+    };
+
+    const fetchStudentStats = async () => {
+      try {
+        const statsResponse = await studentsApi.getStudentStatistics(studentId);
+        setStudentStats(statsResponse.statistics);
+      } catch (error) {
+        console.error("Failed to fetch student stats:", error);
+      }
+    };
+
+    fetchClassInfo();
+    fetchStudentStats();
+  }, [studentId, classId]);
 
   const generateRecommendations = async () => {
     setConfigOpen(false);
@@ -243,127 +277,172 @@ export function StudentRecommendations({
     switch (config.visualization) {
       case "radar":
         return (
-          <ResponsiveContainer width="100%" height={400}>
-            <RadarChart data={chartData}>
-              <PolarGrid strokeDasharray="3 3" />
-              <PolarAngleAxis
-                dataKey="skill"
-                tick={{ fontSize: 12 }}
-                className="text-muted-foreground"
-              />
-              <PolarRadiusAxis
-                angle={90}
-                domain={[0, 100]}
-                tick={{ fontSize: 10 }}
-              />
-              <Radar
-                name="Mastery"
-                dataKey="mastery"
-                stroke="#3b82f6"
-                fill="#3b82f6"
-                fillOpacity={0.6}
-              />
-              <Tooltip
-                content={({ active, payload }) => {
-                  if (active && payload && payload.length) {
-                    const data = payload[0].payload;
-                    return (
-                      <div className="bg-background border rounded-lg p-2 shadow-lg">
-                        <p className="font-medium">{data.fullName}</p>
-                        <p className="text-sm">Beherrschung: {data.mastery}%</p>
-                        <p className="text-sm text-muted-foreground">
-                          Versuche: {data.attempts}
-                        </p>
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
-            </RadarChart>
-          </ResponsiveContainer>
+          <div id={`mastery-chart-${config.visualization}`}>
+            <ResponsiveContainer width="100%" height={400}>
+              <RadarChart data={chartData}>
+                <PolarGrid strokeDasharray="3 3" />
+                <PolarAngleAxis
+                  dataKey="skill"
+                  tick={{ fontSize: 12 }}
+                  className="text-muted-foreground"
+                />
+                <PolarRadiusAxis
+                  angle={90}
+                  domain={[0, 100]}
+                  tick={{ fontSize: 10 }}
+                />
+                <Radar
+                  name="Mastery"
+                  dataKey="mastery"
+                  stroke="#3b82f6"
+                  fill="#3b82f6"
+                  fillOpacity={0.6}
+                />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      return (
+                        <div className="bg-background border rounded-lg p-2 shadow-lg">
+                          <p className="font-medium">{data.fullName}</p>
+                          <p className="text-sm">
+                            Beherrschung: {data.mastery}%
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Versuche: {data.attempts}
+                          </p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
         );
 
       case "bar":
         return (
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart
-              data={chartData}
-              layout="vertical"
-              margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
-            >
-              <XAxis type="number" domain={[0, 100]} />
-              <YAxis
-                dataKey="skill"
-                type="category"
-                tick={{ fontSize: 12 }}
-                width={90}
-              />
-              <Tooltip
-                content={({ active, payload }) => {
-                  if (active && payload && payload.length) {
-                    const data = payload[0].payload;
-                    return (
-                      <div className="bg-background border rounded-lg p-2 shadow-lg">
-                        <p className="font-medium">{data.fullName}</p>
-                        <p className="text-sm">Beherrschung: {data.mastery}%</p>
-                        <p className="text-sm text-muted-foreground">
-                          Versuche: {data.attempts}
-                        </p>
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
-              <Bar dataKey="mastery" fill="#3b82f6">
-                {" "}
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={getColor(entry.mastery)} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          <div id={`mastery-chart-${config.visualization}`}>
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart
+                data={chartData}
+                layout="vertical"
+                margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+              >
+                <XAxis type="number" domain={[0, 100]} />
+                <YAxis
+                  dataKey="skill"
+                  type="category"
+                  tick={{ fontSize: 12 }}
+                  width={90}
+                />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      return (
+                        <div className="bg-background border rounded-lg p-2 shadow-lg">
+                          <p className="font-medium">{data.fullName}</p>
+                          <p className="text-sm">
+                            Beherrschung: {data.mastery}%
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Versuche: {data.attempts}
+                          </p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Bar dataKey="mastery" fill="#3b82f6">
+                  {" "}
+                  {chartData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={getColor(entry.mastery)}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         );
 
       case "table":
         return (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2">Skill</th>
-                  <th className="text-center p-2">Beherrschung</th>
-                  <th className="text-center p-2">Versuche</th>
-                  <th className="text-center p-2">Richtig</th>
-                </tr>
-              </thead>
-              <tbody>
-                {masteryData.map((skill) => (
-                  <tr key={skill.skill_id} className="border-b">
-                    <td className="p-2">{skill.skill_name}</td>
-                    <td className="p-2 text-center">
-                      <Badge
-                        variant="outline"
-                        className={`${
-                          skill.mastery >= 0.7
-                            ? "text-green-600 border-green-600"
-                            : skill.mastery >= 0.4
-                            ? "text-yellow-600 border-yellow-600"
-                            : "text-red-600 border-red-600"
-                        }`}
-                      >
-                        {Math.round(skill.mastery * 100)}%
-                      </Badge>
-                    </td>
-                    <td className="p-2 text-center">{skill.attempt_count}</td>
-                    <td className="p-2 text-center">{skill.correct_count}</td>
+          <div id={`mastery-chart-${config.visualization}`}>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-2">Skill</th>
+                    <th className="text-center p-2">Beherrschung</th>
+                    <th className="text-center p-2">Versuche</th>
+                    <th className="text-center p-2">Richtig</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {masteryData.map((skill) => (
+                    <tr key={skill.skill_id} className="border-b">
+                      <td className="p-2">{skill.skill_name}</td>
+                      <td className="p-2 text-center">
+                        <Badge
+                          variant="outline"
+                          className={`${
+                            skill.mastery >= 0.7
+                              ? "text-green-600 border-green-600"
+                              : skill.mastery >= 0.4
+                              ? "text-yellow-600 border-yellow-600"
+                              : "text-red-600 border-red-600"
+                          }`}
+                        >
+                          {Math.round(skill.mastery * 100)}%
+                        </Badge>
+                      </td>
+                      <td className="p-2 text-center">{skill.attempt_count}</td>
+                      <td className="p-2 text-center">{skill.correct_count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         );
+    }
+  };
+
+  const handleExportPDF = async () => {
+    if (!masteryData || !studentStats) {
+      toast.error("Bitte generieren Sie zuerst die Empfehlungen");
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      await exportRecommendationsPDF(`mastery-chart-${config.visualization}`, {
+        studentName,
+        className: className || "Nicht zugeordnet",
+        visualization: config.visualization,
+        overallMastery,
+        masteryData,
+        recommendations: recommendations || [],
+        stats: {
+          total_interactions: studentStats.total_interactions,
+          correct_interactions: studentStats.correct_interactions,
+          accuracy: studentStats.accuracy,
+          skills_practiced: studentStats.skills_practiced,
+        },
+      });
+
+      toast.success("PDF erfolgreich exportiert!");
+    } catch (error) {
+      console.error("PDF Export Fehler:", error);
+      toast.error("Fehler beim PDF-Export");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -436,14 +515,35 @@ export function StudentRecommendations({
                 Interaktionen
               </p>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setConfigOpen(true)}
-              className="cursor-pointer"
-            >
-              Neu generieren
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportPDF}
+                disabled={isExporting}
+                className="cursor-pointer"
+              >
+                {isExporting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Exportiere...
+                  </>
+                ) : (
+                  <>
+                    <Download className="mr-2 h-4 w-4" />
+                    PDF Export
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setConfigOpen(true)}
+                className="cursor-pointer"
+              >
+                Neu generieren
+              </Button>
+            </div>
           </div>
 
           {/* Overall Mastery Score */}

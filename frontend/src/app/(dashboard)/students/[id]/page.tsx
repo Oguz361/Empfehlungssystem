@@ -385,6 +385,7 @@ export default function StudentDetailPage() {
             studentId={studentId}
             studentName={`${student.first_name} ${student.last_name}`}
             totalInteractions={stats.total_interactions}
+            classId={student.class_id}
           />
         </TabsContent>
       </Tabs>

@@ -36,81 +36,75 @@
 }
 
 :root {
-  --radius: 0.65rem;
-  --background: oklch(1 0 0);                     /* Weiß */
-  --foreground: oklch(0.141 0.005 285.823);        /* Sehr dunkles Grau/Schwarz */
-  
-  --card: oklch(1 0 0);                           /* Weiß */
-  --card-foreground: oklch(0.141 0.005 285.823);  /* Sehr dunkles Grau/Schwarz */
-  
-  --popover: oklch(1 0 0);                        /* Weiß */
-  --popover-foreground: oklch(0.141 0.005 285.823); /* Sehr dunkles Grau/Schwarz */
-  
-  /* Shadcn Default Primary (basiert auf Foreground/Background) */
-  --primary: oklch(0.141 0.005 285.823);        /* Sehr dunkles Grau/Schwarz (wie Foreground) */
-  --primary-foreground: oklch(1 0 0);             /* Weiß (wie Background) */
-  
-  --secondary: oklch(0.967 0.001 286.375);      /* Helles Grau */
-  --secondary-foreground: oklch(0.21 0.006 285.885); /* Dunkleres Grau */
-  
-  --muted: oklch(0.967 0.001 286.375);           /* Helles Grau */
-  --muted-foreground: oklch(0.552 0.016 285.938); /* Mittleres Grau */
-  
-  --accent: oklch(0.967 0.001 286.375);          /* Helles Grau */
-  --accent-foreground: oklch(0.21 0.006 285.885); /* Dunkleres Grau */
-  
-  --destructive: oklch(0.577 0.245 27.325);     /* Rot */
-  
-  --border: oklch(0.92 0.004 286.32);           /* Sehr helles Grau */
-  --input: oklch(0.92 0.004 286.32);            /* Sehr helles Grau */
-  --ring: oklch(0.141 0.005 285.823);           /* Sehr dunkles Grau/Schwarz (wie Primary) */
-  
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+--radius: 0.65rem;
+    --background: rgb(255 255 255);
+    --foreground: rgb(9 9 11);
+    
+    --card: rgb(255 255 255);
+    --card-foreground: rgb(9 9 11);
+    
+    --popover: rgb(255 255 255);
+    --popover-foreground: rgb(9 9 11);
+    
+    --primary: rgb(9 9 11);
+    --primary-foreground: rgb(250 250 250);
+    
+    --secondary: rgb(244 244 245);
+    --secondary-foreground: rgb(9 9 11);
+    
+    --muted: rgb(244 244 245);
+    --muted-foreground: rgb(82 82 91);
+    
+    --accent: rgb(244 244 245);
+    --accent-foreground: rgb(9 9 11);
+    
+    --destructive: rgb(239 68 68);
+    
+    --border: rgb(228 228 231);
+    --input: rgb(228 228 231);
+    --ring: rgb(9 9 11);
+    
+    --chart-1: rgb(222 110 0);   /* Orange/Braun */
+    --chart-2: rgb(0 153 168);   /* Cyan */
+    --chart-3: rgb(56 91 159);   /* Blau/Violett */
+    --chart-4: rgb(205 221 0);   /* Limettengrün */
+    --chart-5: rgb(231 185 0);   /* Gelb/Grün */
 
-  /* Sidebar Variablen entfernt, da Sidebar entfernt wurde */
 }
 
 .dark {
-  --background: oklch(0.141 0.005 285.823);      /* Sehr dunkles Grau/Schwarz */
-  --foreground: oklch(0.985 0 0);                 /* Sehr helles Grau/Fast Weiß */
-  
-  --card: oklch(0.21 0.006 285.885);             /* Dunkles Grau (heller als Background) */
-  --card-foreground: oklch(0.985 0 0);            /* Sehr helles Grau/Fast Weiß */
-  
-  --popover: oklch(0.21 0.006 285.885);          /* Dunkles Grau */
-  --popover-foreground: oklch(0.985 0 0);         /* Sehr helles Grau/Fast Weiß */
+  --background: rgb(9 9 11);
+    --foreground: rgb(250 250 250);
+    
+    --card: rgb(9 9 11);
+    --card-foreground: rgb(250 250 250);
+    
+    --popover: rgb(9 9 11);
+    --popover-foreground: rgb(250 250 250);
+    
+    --primary: rgb(250 250 250);
+    --primary-foreground: rgb(9 9 11);
+    
+    --secondary: rgb(39 39 42);
+    --secondary-foreground: rgb(250 250 250);
+    
+    --muted: rgb(39 39 42);
+    --muted-foreground: rgb(161 161 170);
+    
+    --accent: rgb(39 39 42);
+    --accent-foreground: rgb(250 250 250);
+    
+    --destructive: rgb(127 29 29);
+    
+    --border: rgb(39 39 42);
+    --input: rgb(39 39 42);
+    --ring: rgb(250 250 250);
 
-  /* Shadcn Default Primary (basiert auf Foreground/Background) */
-  --primary: oklch(0.985 0 0);                 /* Sehr helles Grau/Fast Weiß (wie Foreground) */
-  --primary-foreground: oklch(0.141 0.005 285.823); /* Sehr dunkles Grau/Schwarz (wie Background) */
-  
-  --secondary: oklch(0.274 0.006 286.033);        /* Mitteldunkles Grau */
-  --secondary-foreground: oklch(0.985 0 0);       /* Sehr helles Grau/Fast Weiß */
-  
-  --muted: oklch(0.274 0.006 286.033);             /* Mitteldunkles Grau */
-  --muted-foreground: oklch(0.705 0.015 286.067);  /* Helles Grau */
-  
-  --accent: oklch(0.274 0.006 286.033);            /* Mitteldunkles Grau */
-  --accent-foreground: oklch(0.985 0 0);          /* Sehr helles Grau/Fast Weiß */
-  
-  --destructive: oklch(0.704 0.191 22.216);      /* Helleres Rot für Darkmode */
-  
-  /* Anpassung für Border und Input im Darkmode für bessere Lesbarkeit/Kontrast */
-  --border: oklch(0.274 0.006 286.033 / 0.7);     /* Dunklerer, subtiler Rand */
-  --input: oklch(0.274 0.006 286.033 / 0.6);      /* Dunklerer, subtiler Input-Rand */
-  --ring: oklch(0.985 0 0 / 0.7);                 /* Sehr helles Grau/Fast Weiß mit Transparenz (wie Primary) */
-
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  
-  /* Sidebar Variablen entfernt */
+    --chart-1: rgb(101 85 255);  /* Violett */
+    --chart-2: rgb(48 190 166);  /* Türkis */
+    --chart-3: rgb(231 185 0);  /* Gelb/Grün */
+    --chart-4: rgb(235 78 255);  /* Magenta */
+    --chart-5: rgb(255 100 56); /* Orange/Rot */
 }
 
 @layer base {
