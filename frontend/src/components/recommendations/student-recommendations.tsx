@@ -96,7 +96,7 @@ export function StudentRecommendations({
   studentId,
   studentName,
   totalInteractions,
-  classId
+  classId,
 }: StudentRecommendationsProps) {
   const [configOpen, setConfigOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -176,6 +176,7 @@ export function StudentRecommendations({
           correct_count: Math.round(
             (skill.mastery_score || 0.5) * skill.probes_evaluated
           ),
+          confidence: skill.confidence,
         })
       );
 
@@ -265,6 +266,7 @@ export function StudentRecommendations({
       fullName: skill.skill_name,
       mastery: Math.round(skill.mastery * 100),
       attempts: skill.attempt_count,
+      confidence: skill.confidence,
     }));
 
     // Color based on mastery level
@@ -319,6 +321,19 @@ export function StudentRecommendations({
                 />
               </RadarChart>
             </ResponsiveContainer>
+            <div className="mt-4 pt-4 border-t">
+              <h4 className="text-sm font-semibold mb-2 text-muted-foreground">
+                Konfidenz der Schätzung
+              </h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-1 text-xs">
+                {chartData.map((item) => (
+                  <div key={item.fullName} className="flex justify-between">
+                    <span className="truncate mr-2">{item.fullName}:</span>
+                    <span className="font-medium">{item.confidence}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         );
 
@@ -368,6 +383,19 @@ export function StudentRecommendations({
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+            <div className="mt-4 pt-4 border-t">
+              <h4 className="text-sm font-semibold mb-2 text-muted-foreground">
+                Konfidenz der Schätzung
+              </h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-1 text-xs">
+                {chartData.map((item) => (
+                  <div key={item.fullName} className="flex justify-between">
+                    <span className="truncate mr-2">{item.fullName}:</span>
+                    <span className="font-medium">{item.confidence}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         );
 
@@ -382,12 +410,16 @@ export function StudentRecommendations({
                     <th className="text-center p-2">Beherrschung</th>
                     <th className="text-center p-2">Versuche</th>
                     <th className="text-center p-2">Richtig</th>
+                    <th className="text-center p-2">Konfidenz</th>
                   </tr>
                 </thead>
                 <tbody>
                   {masteryData.map((skill) => (
                     <tr key={skill.skill_id} className="border-b">
+                      {/* Spalte 1: Skill */}
                       <td className="p-2">{skill.skill_name}</td>
+
+                      {/* Spalte 2: Beherrschung (korrigiert) */}
                       <td className="p-2 text-center">
                         <Badge
                           variant="outline"
@@ -402,8 +434,27 @@ export function StudentRecommendations({
                           {Math.round(skill.mastery * 100)}%
                         </Badge>
                       </td>
+
+                      {/* Spalte 3: Versuche */}
                       <td className="p-2 text-center">{skill.attempt_count}</td>
+
+                      {/* Spalte 4: Richtig */}
                       <td className="p-2 text-center">{skill.correct_count}</td>
+
+                      {/* Spalte 5: Konfidenz (die wir hinzufügen wollten) */}
+                      <td className="p-2 text-center">
+                        <Badge
+                          variant={
+                            skill.confidence === "high"
+                              ? "default"
+                              : skill.confidence === "medium"
+                              ? "secondary"
+                              : "destructive"
+                          }
+                        >
+                          {skill.confidence}
+                        </Badge>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

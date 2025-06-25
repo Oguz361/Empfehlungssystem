@@ -98,7 +98,6 @@ export async function exportRecommendationsPDF(
 
   const chartElement = document.getElementById(chartElementId);
   if (chartElement) {
-    chartElement.classList.add('pdf-export-styles'); 
     try {
       const canvas = await html2canvas(chartElement, {
         scale: 2,
@@ -118,9 +117,40 @@ export async function exportRecommendationsPDF(
       addText('(Visualisierung konnte nicht geladen werden)', 10);
       yPosition += 5;
     }
-    finally {
-      chartElement.classList.remove('pdf-export-styles');
-    }
+  }
+
+    if (options.masteryData && options.masteryData.length > 0) {
+    addPageIfNeeded(15); // Platz für Titel und einige Zeilen
+    yPosition += 8;
+
+    pdf.setFontSize(10);
+    
+    // Zweispaltiges Layout für die Konfidenzwerte
+    const midPoint = margin + contentWidth / 2;
+    let leftY = yPosition;
+    let rightY = yPosition;
+
+    options.masteryData.forEach((skill, index) => {
+        const skillText = `${skill.skill_name}:`;
+        const confidenceText = skill.confidence;
+
+        if (index % 2 === 0) { // Linke Spalte
+            addPageIfNeeded(7);
+            pdf.setFont('bold');
+            pdf.text(skillText, margin, leftY);
+            pdf.setFont('normal');
+            pdf.text(confidenceText, margin + 50, leftY);
+            leftY += 7;
+        } else { // Rechte Spalte
+            pdf.setFont('bold');
+            pdf.text(skillText, midPoint, rightY);
+            pdf.setFont('normal');
+            pdf.text(confidenceText, midPoint + 50, rightY);
+            rightY += 7;
+        }
+    });
+
+    yPosition = Math.max(leftY, rightY) + 10;
   }
 
   // 4. Skill-Details (bei Tabellen-Ansicht zusätzlich)
