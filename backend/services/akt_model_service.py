@@ -254,8 +254,7 @@ class AKTModelService:
                         next_skill_id=target_skill_id
                     )
                     
-                    # Kombiniere historische Accuracy mit Prediction
-                    mastery_score = 0.7 * predicted_prob + 0.3 * simple_accuracy
+                    mastery_score = predicted_prob 
                     
                     return {
                         "mastery_score": round(mastery_score, 3),
